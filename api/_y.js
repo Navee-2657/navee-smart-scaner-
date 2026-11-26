@@ -28,3 +28,16 @@ export async function summary(s, mods) {
   const j = await x.json();
   return j.quoteSummary.result[0];
 }
+const UAS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+export const UA = { "User-Agent": UAS, Accept: "application/json, text/plain, */*" };
+export async function nseGet(paths) {
+  const h0 = await fetch("https://www.nseindia.com", { headers: { "User-Agent": UAS, Accept: "text/html" }, signal: AbortSignal.timeout(7000) });
+  const raw = h0.headers.getSetCookie ? h0.headers.getSetCookie() : [h0.headers.get("set-cookie") || ""];
+  const cookie = raw.map((c) => c.split(";")[0]).filter(Boolean).join("; ");
+  return Promise.all(paths.map(async (p) => {
+    try {
+      const x = await fetch("https://www.nseindia.com" + p, { headers: { ...UA, Referer: "https://www.nseindia.com/", Cookie: cookie }, signal: AbortSignal.timeout(8000) });
+      return x.ok ? await x.json() : null;
+    } catch (e) { return null; }
+  }));
+}
